@@ -5,6 +5,8 @@ import com.userservice.domain.User;
 import com.userservice.repository.RoleRepository;
 import com.userservice.repository.UserRepository;
 import com.userservice.service.UserService;
+import com.userservice.service.dto.UserDTO;
+import com.userservice.service.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,9 +21,11 @@ import java.util.List;
 public class UserServiceImp implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final UserMapper userMapper;
 
     @Override
-    public User saveUser(User user) {
+    public User saveUser(UserDTO userDTO) {
+        User user = userMapper.toEntity(userDTO);
         log.info("Saving new user {} to the database", user.getName());
         return userRepository.save(user);
     }
