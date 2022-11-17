@@ -9,16 +9,22 @@ import com.userservice.service.dto.UserDTO;
 import com.userservice.service.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 @Slf4j
-public class UserServiceImp implements UserService {
+public class UserServiceImp implements UserService, UserDetailsService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final UserMapper userMapper;
@@ -48,5 +54,19 @@ public class UserServiceImp implements UserService {
     public List<User> getUsers() {
         log.info("Fething all users");
         return userRepository.findAll();
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByUsername(username);
+        if (Objects.isNull(user)) {
+            log.error("User not found in database");
+            throw new UsernameNotFoundException("User not found in database");
+        } else {
+            log.info("User found in database: {}" + username );
+        }
+        List<SimpleGrantedAuthority> authorities = new ArrayList<>();
+        user.getRoles().forEach(role -> authorities.add(new SimpleGrantedAuthority(role.getName())));
+        return new org.springframework.security.core.userdetails.User(user.getUsername(), user.getPassword(), authorities);
     }
 }
